@@ -6,9 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(modifier: Modifier = Modifier,
+                  navController : NavController
+) {
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -16,7 +19,7 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
     ) {
         Text(text = "Profile Screen", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* TODO: Logout */ }) {
+        Button(onClick = {navController.navigate("login")}) {
             Text("Logout")
         }
     }

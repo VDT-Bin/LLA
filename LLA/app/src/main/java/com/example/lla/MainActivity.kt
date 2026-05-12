@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.lla.ui.theme.LLATheme
+import com.example.lla.uis.auth.AuthViewModel
 import com.example.lla.uis.auth.LanguageSelectionScreen
 import com.example.lla.uis.auth.LoginScreen
 import com.example.lla.uis.auth.RegisterScreen
@@ -94,7 +95,7 @@ fun MainNavigation() {
                 }
 
                 composable(AppDestinations.PROFILE.route) {
-                    ProfileScreen(modifier = Modifier.fillMaxSize())
+                    ProfileScreen(modifier = Modifier.fillMaxSize(), navController)
                 }
 
                 composable("language_selection") {
@@ -109,8 +110,8 @@ fun MainNavigation() {
 
                 composable("login") {
                     LoginScreen(
-                        onLoginClick = { navController.navigate(AppDestinations.HOME.route) },
-                        onRegisterClick = { navController.navigate("register") }
+                        viewModel = AuthViewModel(),
+                        navController = navController
                     )
                 }
 
