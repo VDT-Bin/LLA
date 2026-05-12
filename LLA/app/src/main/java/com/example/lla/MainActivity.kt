@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
@@ -42,19 +43,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // Kiểm tra xem route hiện tại có nằm trong danh sách cần hiện thanh điều hướng không
     val showBottomBar = AppDestinations.entries.any { it.route == currentDestination?.route }
 
-    // Sử dụng NavigationSuiteScaffold bao bọc bên ngoài
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            // Chỉ hiển thị các item nếu showBottomBar = true
             if (showBottomBar) {
                 AppDestinations.entries.forEach { destination ->
                     item(
@@ -75,14 +74,12 @@ fun MainNavigation() {
             }
         }
     ) {
-        // CHỈ SỬ DỤNG 1 NAVHOST DUY NHẤT TẠI ĐÂY
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = "language_selection", // Bắt đầu từ màn hình chọn ngôn ngữ
+                startDestination = "login",
                 modifier = Modifier.padding(innerPadding)
             ) {
-                // --- Nhóm các màn hình Chính (Có Bottom Bar) ---
                 composable(AppDestinations.HOME.route) {
                     HomeScreen(
                         onPracticeClick = { navController.navigate("flashcard") },
@@ -91,23 +88,19 @@ fun MainNavigation() {
                 }
 
                 composable(AppDestinations.TOPICS.route) {
-                    TopicScreen(Modifier.fillMaxSize(),{
+                    TopicScreen(modifier = Modifier.fillMaxSize()) {
                         navController.navigate("flashcard")
-                })
-
+                    }
                 }
 
                 composable(AppDestinations.PROFILE.route) {
                     ProfileScreen(modifier = Modifier.fillMaxSize())
                 }
 
-                // --- Nhóm các màn hình Auth/Phụ (Không có Bottom Bar) ---
                 composable("language_selection") {
                     LanguageSelectionScreen(
                         onContinue = {
-                            // Giờ đây "home" đã nằm trong cùng một NavHost nên sẽ không bị lỗi
                             navController.navigate(AppDestinations.HOME.route) {
-                                // Xóa màn hình chọn ngôn ngữ khỏi stack để người dùng không quay lại được bằng nút back
                                 popUpTo("language_selection") { inclusive = true }
                             }
                         }
@@ -136,13 +129,12 @@ fun MainNavigation() {
     }
 }
 
-
 enum class AppDestinations(
     val label: String,
     val icon: ImageVector,
     val route: String
 ) {
     HOME("Home", Icons.Default.Home, "home"),
-    TOPICS("Topics", Icons.Default.Home, "topics"),
+    TOPICS("Topics", Icons.AutoMirrored.Filled.MenuBook, "topics"),
     PROFILE("Profile", Icons.Default.AccountCircle, "profile"),
 }
