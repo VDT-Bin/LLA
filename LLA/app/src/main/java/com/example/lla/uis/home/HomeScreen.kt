@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,13 +22,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.lla.ui.theme.*
+import com.example.lla.uis.auth.AuthState
+import com.example.lla.uis.auth.AuthViewModel
+import com.example.lla.uis.topic.TopicViewModel
+
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel,
+    topicViewModel: TopicViewModel,
     onPracticeClick: () -> Unit = {},
     onTopicClick: () -> Unit = {}
 ) {
+    val authState by authViewModel.authState.collectAsState()
+    val reviewVocabs by topicViewModel.reviewVocabularies.collectAsState()
+    
+    // Tải danh sách ôn tập khi user đăng nhập
+    LaunchedEffect(authState) {
+        val user = (authState as? AuthState.Success)?.user
+        user?.let {
+            topicViewModel.fetchReviewVocabularies(it.uid)
+        }
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -52,7 +69,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "LinguistPlay",
+                        text = "LLA",
                         style = MaterialTheme.typography.titleMedium,
                         color = PrimaryColor,
                         fontWeight = FontWeight.Bold
@@ -83,8 +100,9 @@ fun HomeScreen(
         // Welcome Section
         item {
             Column {
+                val user = (authState as? AuthState.Success)?.user
                 Text(
-                    text = "Chào buổi sáng, User 👋",
+                    text = "Xin Chào ${user?.displayName ?: "Người dùng"}",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -119,32 +137,39 @@ fun HomeScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("20 từ cần ôn", color = Color.White, style = MaterialTheme.typography.bodySmall)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("5 phút", color = Color.White, style = MaterialTheme.typography.bodySmall)
+                            Text("${reviewVocabs.size} từ cần ôn", color = Color.White, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                     Button(
-                        onClick = onPracticeClick,
+                        onClick = {
+                            if (reviewVocabs.isNotEmpty()) {
+                                topicViewModel.setVocabulariesForReview()
+                                onPracticeClick()
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = SecondaryColor),
                         shape = RoundedCornerShape(12.dp),
+                        enabled = reviewVocabs.isNotEmpty(),
                         contentPadding = PaddingValues(vertical = 12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Bắt đầu ôn", color = PrimaryColor, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = PrimaryColor)
+                            Text(
+                                text = if (reviewVocabs.isEmpty()) "Chưa có từ cần ôn" else "Bắt đầu ôn",
+                                color = PrimaryColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (reviewVocabs.isNotEmpty()) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = PrimaryColor)
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Continuing Topics
+        // Continuing Topics (Phần này có thể tải động sau)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
@@ -153,7 +178,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Chủ đề đang học dở",
+                        text = "Chủ đề gợi ý",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -163,16 +188,10 @@ fun HomeScreen(
                 }
 
                 TopicProgressCard(
-                    title = "Ẩm thực thế giới", 
+                    title = "Ẩm thực", 
                     progress = 0.6f, 
-                    subText = "60% • Bài 12/20",
-                    onClick = onPracticeClick
-                )
-                TopicProgressCard(
-                    title = "Giao thông & Du lịch", 
-                    progress = 0.4f, 
-                    subText = "40% • Bài 8/20",
-                    onClick = onPracticeClick
+                    subText = "Tiếp tục bài học dở",
+                    onClick = onTopicClick
                 )
             }
         }
@@ -196,8 +215,8 @@ fun HomeScreen(
                         )
                     }
                     
-                    ChallengeItem(task = "Hoàn thành 1 bài ôn tập", reward = "+10 XP", isDone = true)
-                    ChallengeItem(task = "Học thêm 5 từ mới", reward = "0/5", isDone = false)
+                    ChallengeItem(task = "Hoàn thành 1 bài ôn tập", reward = "+10 XP", isDone = reviewVocabs.isEmpty())
+                    ChallengeItem(task = "Học thêm chủ đề mới", reward = "0/1", isDone = false)
                 }
             }
         }

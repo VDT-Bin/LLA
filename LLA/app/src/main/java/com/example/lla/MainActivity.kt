@@ -17,14 +17,16 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.lla.ui.theme.LLATheme
-import com.example.lla.uis.auth.AuthState
 import com.example.lla.uis.auth.AuthViewModel
 import com.example.lla.uis.auth.LanguageSelectionScreen
 import com.example.lla.uis.auth.LoginScreen
@@ -33,6 +35,7 @@ import com.example.lla.uis.home.HomeScreen
 import com.example.lla.uis.profile.ProfileScreen
 import com.example.lla.uis.topic.FlashcardScreen
 import com.example.lla.uis.topic.TopicScreen
+import com.example.lla.uis.topic.TopicViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,9 +52,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
-    val authViewModel = AuthViewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    
+    val authViewModel: AuthViewModel = viewModel()
+    val topicViewModel: TopicViewModel = viewModel()
 
     val showBottomBar = AppDestinations.entries.any { it.route == currentDestination?.route }
 
@@ -77,29 +82,39 @@ fun MainNavigation() {
             }
         }
     ) {
-        val authState by authViewModel.authState.collectAsState()
-
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = if (authState is AuthState.Success) "home" else "login" ,
+                startDestination = "login",
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(AppDestinations.HOME.route) {
                     HomeScreen(
-                        onPracticeClick = { navController.navigate("flashcard") },
+                        modifier = Modifier.fillMaxSize(),
+                        authViewModel = authViewModel,
+                        topicViewModel = topicViewModel,
+                        onPracticeClick = { /* Điều hướng đến bài tập */ },
                         onTopicClick = { navController.navigate(AppDestinations.TOPICS.route) }
                     )
                 }
 
                 composable(AppDestinations.TOPICS.route) {
-                    TopicScreen(modifier = Modifier.fillMaxSize()) {
-                        navController.navigate("flashcard")
-                    }
+                    TopicScreen(
+                        viewModel = topicViewModel,
+                        modifier = Modifier.fillMaxSize(),
+                        onTopicClick = { topicId ->
+                            navController.navigate("flashcard/$topicId")
+                        }
+                    )
                 }
 
                 composable(AppDestinations.PROFILE.route) {
-                    ProfileScreen(modifier = Modifier.fillMaxSize(), navController,authViewModel)
+                    ProfileScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        navController = navController,
+                        authViewModel = authViewModel,
+                        topicViewModel = topicViewModel
+                    )
                 }
 
                 composable("language_selection") {
@@ -114,7 +129,6 @@ fun MainNavigation() {
 
                 composable("login") {
                     LoginScreen(
-                        modifier = Modifier.fillMaxSize(),
                         viewModel = authViewModel,
                         navController = navController
                     )
@@ -122,13 +136,22 @@ fun MainNavigation() {
 
                 composable("register") {
                     RegisterScreen(
-                        modifier = Modifier.fillMaxSize()
-                        ,navController
+                        navController = navController,
+                        authViewModel = authViewModel
                     )
                 }
 
-                composable("flashcard") {
-                    FlashcardScreen(onClose = { navController.popBackStack() })
+                composable(
+                    route = "flashcard/{topicId}",
+                    arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+                    FlashcardScreen(
+                        viewModel = topicViewModel,
+                        authViewModel = authViewModel,
+                        topicId = topicId,
+                        onClose = { navController.popBackStack() }
+                    )
                 }
             }
         }

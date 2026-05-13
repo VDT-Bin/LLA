@@ -83,6 +83,18 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    fun changePassword(newPass: String, onComplete: (Boolean, String?) -> Unit) {
+        val user = auth.currentUser
+        user?.updatePassword(newPass)
+            ?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onComplete(true, null)
+                } else {
+                    onComplete(false, task.exception?.message)
+                }
+            }
+    }
+
     fun signInWithGoogle(credentialResponse: GetCredentialResponse) {
         _authState.value = AuthState.Loading
         val credential = credentialResponse.credential

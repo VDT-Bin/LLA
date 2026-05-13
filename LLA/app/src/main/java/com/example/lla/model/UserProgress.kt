@@ -1,8 +1,10 @@
 package com.example.lla.model
 
 data class UserProgress(
-    val wordId: String ="",
-    val userId: String ="",
-    val level: String ="",
-    val lastReview: Long = System.currentTimeMillis()
+    var id: String = "",
+    var userId: String = "",
+    var vocabularyId: String = "",
+    var level: Int = 0, // 1: Quên, 2: Khó, 3: Tốt, 4: Dễ
+    var lastReview: Long = 0,
+    var nextReview: Long = 0
 )
