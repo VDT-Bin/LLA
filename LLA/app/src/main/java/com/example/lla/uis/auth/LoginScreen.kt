@@ -9,10 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.navigation.NavController
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
+    modifier: Modifier = Modifier,
     viewModel: AuthViewModel,
     navController: NavController
 ) {
@@ -20,6 +25,10 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val authState by viewModel.authState.collectAsState()
     val context = LocalContext.current
+
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = CredentialManager.create(context)
+
 
     LaunchedEffect(authState) {
         when (authState) {
@@ -69,10 +78,11 @@ fun LoginScreen(
         } else {
             Button(
                 onClick = { viewModel.login(email, password) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
                 Text("Đăng nhập")
             }
+
         }
         
         TextButton(
@@ -80,6 +90,42 @@ fun LoginScreen(
             enabled = authState !is AuthState.Loading
         ) {
             Text("Chưa có tài khoản? Đăng ký ngay")
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        Button(
+            onClick = {
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId("423783830947-22o9sp9jr6dqa0u5l4gsai3lulnr41ep.apps.googleusercontent.com")
+                    .setAutoSelectEnabled(true)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                coroutineScope.launch {
+                    try {
+                        val result = credentialManager.getCredential(context, request)
+                        viewModel.signInWithGoogle(result)
+                    } catch (e: Exception) {
+                        android.util.Log.e("AUTH", "Google Sign In Error: ${e.message}")
+
+                        val errorMessage = when (e) {
+                            is androidx.credentials.exceptions.GetCredentialException -> {
+                                "Vui lòng đăng nhập Google vào máy ảo/điện thoại trước"
+                            }
+                            else -> e.message ?: "Lỗi không xác định"
+                        }
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(50.dp)
+        ) {
+            Text("Đăng nhập bằng Google")
         }
     }
 }

@@ -110,6 +110,7 @@ fun MainNavigation() {
 
                 composable("login") {
                     LoginScreen(
+                        modifier = Modifier.fillMaxSize(),
                         viewModel = AuthViewModel(),
                         navController = navController
                     )
@@ -117,8 +118,8 @@ fun MainNavigation() {
 
                 composable("register") {
                     RegisterScreen(
-                        onRegisterClick = { navController.navigate("language_selection") },
-                        onLoginClick = { navController.navigate("login") }
+                        modifier = Modifier.fillMaxSize()
+                        ,navController
                     )
                 }
 

@@ -1,9 +1,14 @@
 package com.example.lla.uis.auth
 
+import androidx.credentials.GetCredentialResponse
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import com.google.firebase.auth.auth
+
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,9 +21,8 @@ sealed class AuthState {
 }
 
 class AuthViewModel : ViewModel() {
-    private val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
-
+    private val auth = Firebase.auth
+    private val firestore = Firebase.firestore
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
@@ -70,6 +74,42 @@ class AuthViewModel : ViewModel() {
                     _authState.value = AuthState.Error(task.exception?.message ?: "Đăng ký thất bại")
                 }
             }
+    }
+
+    fun signInWithGoogle(credentialResponse: GetCredentialResponse) {
+        _authState.value = AuthState.Loading
+        val credential = credentialResponse.credential
+        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+        val idToken = googleIdTokenCredential.idToken
+
+        val firebaseCredential = GoogleAuthProvider.getCredential(idToken,null)
+
+        auth.signInWithCredential(firebaseCredential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    checkAndCreateUserInFirestore(auth.currentUser)
+                } else {
+                    _authState.value = AuthState.Error(task.exception?.message ?: "Đăng nhập thất bại")
+                }
+            }
+    }
+
+    private fun checkAndCreateUserInFirestore(user: FirebaseUser?) {
+        user?.let {
+            val userRef = firestore.collection("users").document(it.uid)
+            userRef.get().addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    val userMap = hashMapOf(
+                        "uid" to it.uid,
+                        "name" to (it.displayName ?: "Người dùng Google"),
+                        "email" to it.email,
+                        "createdAt" to System.currentTimeMillis()
+                    )
+                    userRef.set(userMap)
+                }
+                _authState.value = AuthState.Success(it)
+            }
+        }
     }
 
     fun logout() {
