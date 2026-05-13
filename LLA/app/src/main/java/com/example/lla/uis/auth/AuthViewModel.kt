@@ -26,6 +26,13 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
+
+    init {
+        val currentUser = auth.currentUser
+        if (currentUser != null){
+            _authState.value = AuthState.Success(currentUser)
+        }
+    }
     fun login(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _authState.value = AuthState.Error("Email và mật khẩu không được để trống")
@@ -93,7 +100,6 @@ class AuthViewModel : ViewModel() {
                 }
             }
     }
-
     private fun checkAndCreateUserInFirestore(user: FirebaseUser?) {
         user?.let {
             val userRef = firestore.collection("users").document(it.uid)

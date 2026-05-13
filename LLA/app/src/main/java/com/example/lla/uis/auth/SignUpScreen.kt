@@ -19,6 +19,7 @@ fun RegisterScreen(
     ,navController : NavController
     ,authViewModel : AuthViewModel = viewModel()
 ) {
+
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

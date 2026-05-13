@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.lla.ui.theme.LLATheme
+import com.example.lla.uis.auth.AuthState
 import com.example.lla.uis.auth.AuthViewModel
 import com.example.lla.uis.auth.LanguageSelectionScreen
 import com.example.lla.uis.auth.LoginScreen
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
+    val authViewModel = AuthViewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
@@ -75,10 +77,12 @@ fun MainNavigation() {
             }
         }
     ) {
+        val authState by authViewModel.authState.collectAsState()
+
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = "login",
+                startDestination = if (authState is AuthState.Success) "home" else "login" ,
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(AppDestinations.HOME.route) {
@@ -95,7 +99,7 @@ fun MainNavigation() {
                 }
 
                 composable(AppDestinations.PROFILE.route) {
-                    ProfileScreen(modifier = Modifier.fillMaxSize(), navController)
+                    ProfileScreen(modifier = Modifier.fillMaxSize(), navController,authViewModel)
                 }
 
                 composable("language_selection") {
@@ -111,7 +115,7 @@ fun MainNavigation() {
                 composable("login") {
                     LoginScreen(
                         modifier = Modifier.fillMaxSize(),
-                        viewModel = AuthViewModel(),
+                        viewModel = authViewModel,
                         navController = navController
                     )
                 }
