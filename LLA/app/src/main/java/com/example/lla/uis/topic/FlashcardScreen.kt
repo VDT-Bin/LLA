@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.lla.ui.theme.*
 import com.example.lla.uis.auth.AuthState
 import com.example.lla.uis.auth.AuthViewModel
+import com.example.lla.model.Vocabulary
 import java.util.*
 
 @Composable
@@ -54,7 +55,7 @@ fun FlashcardScreen(
     }
 
     LaunchedEffect(topicId) {
-        viewModel.fetchVocabularies(topicId)
+        viewModel.fetchVocabulariesByLesson(topicId)
     }
 
     LaunchedEffect(currentIndex) {
@@ -164,19 +165,19 @@ fun FlashcardScreen(
                 val user = (authState as? AuthState.Success)?.user
 
                 RatingButton("Quên", Color(0xFFFFEBEE), Color(0xFFE57373), Modifier.weight(1f)) {
-                    user?.let { viewModel.updateProgress(it.uid, currentVocab, 1) }
+                    user?.let { viewModel.updateVocabProgress(it.uid, currentVocab, 1) }
                     if (currentIndex < vocabularies.size - 1) currentIndex++ else onClose()
                 }
                 RatingButton("Khó", Color(0xFFFFF3E0), Color(0xFFFFB74D), Modifier.weight(1f)) {
-                    user?.let { viewModel.updateProgress(it.uid, currentVocab, 2) }
+                    user?.let { viewModel.updateVocabProgress(it.uid, currentVocab, 2) }
                     if (currentIndex < vocabularies.size - 1) currentIndex++ else onClose()
                 }
                 RatingButton("Tốt", Color(0xFFE0F2F1), Color(0xFF4DB6AC), Modifier.weight(1f)) {
-                    user?.let { viewModel.updateProgress(it.uid, currentVocab, 3) }
+                    user?.let { viewModel.updateVocabProgress(it.uid, currentVocab, 3) }
                     if (currentIndex < vocabularies.size - 1) currentIndex++ else onClose()
                 }
                 RatingButton("Dễ", Color(0xFFE3F2FD), Color(0xFF64B5F6), Modifier.weight(1f)) {
-                    user?.let { viewModel.updateProgress(it.uid, currentVocab, 4) }
+                    user?.let { viewModel.updateVocabProgress(it.uid, currentVocab, 4) }
                     if (currentIndex < vocabularies.size - 1) currentIndex++ else onClose()
                 }
                 }

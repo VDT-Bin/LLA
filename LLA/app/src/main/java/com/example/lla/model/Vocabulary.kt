@@ -6,5 +6,5 @@ data class Vocabulary(
     var meaning: String = "",
     var pronunciation: String = "",
     var emoji: String = "",
-    var topicId: String = ""
+    var lessonId: String = "" // Đã đổi topicId thành lessonId để khớp luồng Topic -> Lesson -> Vocabulary
 )

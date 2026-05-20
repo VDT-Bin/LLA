@@ -123,12 +123,16 @@ class AuthViewModel : ViewModel() {
                         "email" to it.email,
                         "createdAt" to System.currentTimeMillis()
                     )
-                    userRef.set(userMap)
+                    userRef.set(userMap).addOnSuccessListener {
+                        _authState.value = AuthState.Success(user)
+                    }.addOnFailureListener { e ->
+                        _authState.value = AuthState.Error("Lỗi lưu DB: ${e.message}")
+                    }
+                } else {
+                    _authState.value = AuthState.Success(user)
                 }
-                _authState.value = AuthState.Success(it)
             }
-        }
-    }
+        }    }
 
     fun logout() {
         auth.signOut()

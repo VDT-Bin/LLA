@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -13,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,8 +30,7 @@ fun TopicScreen(
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredTopics = topics.filter {
-        it.name.contains(searchQuery, ignoreCase = true) ||
-                it.description.contains(searchQuery, ignoreCase = true)
+        it.name.contains(searchQuery, ignoreCase = true)
     }
 
     Column(
@@ -42,51 +39,16 @@ fun TopicScreen(
             .background(BackgroundColor)
             .padding(16.dp)
     ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "LLA",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PrimaryColor,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = LightBlue,
-                modifier = Modifier.height(32.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "🔥", fontSize = 14.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "12",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = PrimaryColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
+        Text(
+            text = "Khám phá chủ đề",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryColor
+        )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Search Bar
+        // Thanh tìm kiếm
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -95,14 +57,12 @@ fun TopicScreen(
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = Color(0xFFF5F5F5),
-                focusedContainerColor = Color(0xFFF5F5F5),
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = PrimaryColor
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White
             )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         if (isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -126,32 +86,49 @@ fun TopicItem(topic: Topic, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(110.dp)
+            .padding(horizontal = 4.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = LightBlue,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "${topic.wordCount} từ",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = PrimaryColor
-                    )
-                }
-                Text(text = topic.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(text = topic.description, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Phần hiển thị Emoji bên trái
+            Box(
+                modifier = Modifier
+                    .width(110.dp)
+                    .fillMaxHeight()
+                    .background(LightBlue),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = topic.emoji.ifEmpty { "📚" },
+                    fontSize = 40.sp
+                )
             }
-            Text(text = topic.emoji, fontSize = 48.sp)
+
+            // Phần hiển thị thông tin bên phải
+            Column(
+                modifier = Modifier
+                    .weight(1f) // Để Column chiếm hết phần còn lại
+                    .padding(16.dp)
+                    .align(Alignment.CenterVertically)
+            ) {
+                Text(
+                    text = topic.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = topic.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    maxLines = 2 // Cho phép hiện 2 dòng mô tả
+                )
+            }
         }
     }
 }

@@ -34,6 +34,7 @@ import com.example.lla.uis.auth.RegisterScreen
 import com.example.lla.uis.home.HomeScreen
 import com.example.lla.uis.profile.ProfileScreen
 import com.example.lla.uis.topic.FlashcardScreen
+import com.example.lla.uis.topic.LessonScreen
 import com.example.lla.uis.topic.TopicScreen
 import com.example.lla.uis.topic.TopicViewModel
 
@@ -93,7 +94,11 @@ fun MainNavigation() {
                         modifier = Modifier.fillMaxSize(),
                         authViewModel = authViewModel,
                         topicViewModel = topicViewModel,
-                        onPracticeClick = { /* Điều hướng đến bài tập */ },
+                        onPracticeClick = { 
+                            // Chế độ ôn tập: Lấy từ vựng cần ôn từ userProgress
+                            topicViewModel.prepareReviewMode()
+                            navController.navigate("flashcard/review") 
+                        },
                         onTopicClick = { navController.navigate(AppDestinations.TOPICS.route) }
                     )
                 }
@@ -103,7 +108,22 @@ fun MainNavigation() {
                         viewModel = topicViewModel,
                         modifier = Modifier.fillMaxSize(),
                         onTopicClick = { topicId ->
-                            navController.navigate("flashcard/$topicId")
+                            navController.navigate("lessons/$topicId")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "lessons/{topicId}",
+                    arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+                    LessonScreen(
+                        viewModel = topicViewModel,
+                        topicId = topicId,
+                        onBackClick = { navController.popBackStack() },
+                        onLessonClick = { lessonId ->
+                            navController.navigate("flashcard/$lessonId")
                         }
                     )
                 }
@@ -113,7 +133,12 @@ fun MainNavigation() {
                         modifier = Modifier.fillMaxSize(),
                         navController = navController,
                         authViewModel = authViewModel,
-                        topicViewModel = topicViewModel
+                        topicViewModel = topicViewModel,
+                        onReviewLearnedClick = {
+                            // Chế độ ôn tập lại các từ đã học từ Profile
+                            topicViewModel.prepareReviewLearnedMode()
+                            navController.navigate("flashcard/review")
+                        }
                     )
                 }
 
@@ -142,14 +167,14 @@ fun MainNavigation() {
                 }
 
                 composable(
-                    route = "flashcard/{topicId}",
-                    arguments = listOf(navArgument("topicId") { type = NavType.StringType })
+                    route = "flashcard/{lessonId}",
+                    arguments = listOf(navArgument("lessonId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+                    val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
                     FlashcardScreen(
                         viewModel = topicViewModel,
                         authViewModel = authViewModel,
-                        topicId = topicId,
+                        topicId = lessonId,
                         onClose = { navController.popBackStack() }
                     )
                 }
