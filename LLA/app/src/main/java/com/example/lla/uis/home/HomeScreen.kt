@@ -35,7 +35,6 @@ fun HomeScreen(
     
     val user = (authState as? AuthState.Success)?.user
 
-    // Tải danh sách các từ cần ôn tập ngay khi vào Home
     LaunchedEffect(user) {
         user?.let {
             topicViewModel.fetchReviewVocabularies(it.uid)

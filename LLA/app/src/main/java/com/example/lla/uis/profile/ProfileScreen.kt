@@ -3,6 +3,7 @@ package com.example.lla.uis.profile
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,6 +41,7 @@ fun ProfileScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     topicViewModel: TopicViewModel,
+    onSeeAllLearnedClick: () -> Unit,
     onReviewLearnedClick: () -> Unit // Thêm tham số này
 ) {
     val authState by authViewModel.authState.collectAsState()
@@ -79,86 +81,52 @@ fun ProfileScreen(
             .background(Color(0xFFF8F9FE))
             .padding(16.dp)
     ) {
+        // ... (Phần tiêu đề và Đổi mật khẩu giữ nguyên)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 2. THAY THẾ TOÀN BỘ PHẦN DANH SÁCH CŨ BẰNG Ô BẤM NÀY
         Text(
-            text = "Hồ sơ của tôi",
-            style = MaterialTheme.typography.headlineMedium,
+            text = "Tiến trình học tập",
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Đổi mật khẩu
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onSeeAllLearnedClick() }, // Ấn vào để mở trang danh sách
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "Bảo mật tài khoản", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = { Text("Mật khẩu mới") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) }
-                )
-                Button(
-                    onClick = {
-                        if (newPassword.length >= 6) {
-                            authViewModel.changePassword(newPassword) { s, e ->
-                                if (s) {
-                                    Toast.makeText(context, "Thành công", Toast.LENGTH_SHORT).show()
-                                    newPassword = ""
-                                } else Toast.makeText(context, "Lỗi: $e", Toast.LENGTH_SHORT).show()
-                            }
-                        } else Toast.makeText(context, "Tối thiểu 6 ký tự", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
-                ) { Text("CẬP NHẬT MẬT KHẨU") }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Tiêu đề & Nút Ôn tập từ đã học
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Đã học (${learnedVocabs.size} từ)",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            if (learnedVocabs.isNotEmpty()) {
-                TextButton(onClick = onReviewLearnedClick) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("ÔN TẬP LẠI", color = PrimaryColor)
-                }
-            }
-        }
-
-        if (isLoading) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                items(learnedVocabs) { vocab ->
-                    LearnedVocabItem(vocab = vocab, onSpeak = { tts?.speak(vocab.word, TextToSpeech.QUEUE_FLUSH, null, null) })
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Từ vựng đã học",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    Text(
+                        text = "Bạn đã thuộc ${learnedVocabs.size} từ vựng",
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = PrimaryColor
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.weight(1f)) // Đẩy nút Đăng xuất xuống dưới cùng
 
         OutlinedButton(
             onClick = {

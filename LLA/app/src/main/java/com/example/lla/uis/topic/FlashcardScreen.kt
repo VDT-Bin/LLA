@@ -1,6 +1,7 @@
 package com.example.lla.uis.topic
 
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -162,9 +163,10 @@ fun FlashcardScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val user = (authState as? AuthState.Success)?.user
+                val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
 
                 RatingButton("Quên", Color(0xFFFFEBEE), Color(0xFFE57373), Modifier.weight(1f)) {
+                    Log.d("TopicVM_Debug", "Đã bấm nút 'Quên'. Trạng thái user hiện tại: $user")
                     user?.let { viewModel.updateVocabProgress(it.uid, currentVocab, 1) }
                     if (currentIndex < vocabularies.size - 1) currentIndex++ else onClose()
                 }

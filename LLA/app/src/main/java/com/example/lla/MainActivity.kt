@@ -32,6 +32,7 @@ import com.example.lla.uis.auth.LanguageSelectionScreen
 import com.example.lla.uis.auth.LoginScreen
 import com.example.lla.uis.auth.RegisterScreen
 import com.example.lla.uis.home.HomeScreen
+import com.example.lla.uis.profile.LearnedVocabListScreen
 import com.example.lla.uis.profile.ProfileScreen
 import com.example.lla.uis.topic.FlashcardScreen
 import com.example.lla.uis.topic.LessonScreen
@@ -55,7 +56,7 @@ fun MainNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    
+
     val authViewModel: AuthViewModel = viewModel()
     val topicViewModel: TopicViewModel = viewModel()
 
@@ -94,10 +95,9 @@ fun MainNavigation() {
                         modifier = Modifier.fillMaxSize(),
                         authViewModel = authViewModel,
                         topicViewModel = topicViewModel,
-                        onPracticeClick = { 
-                            // Chế độ ôn tập: Lấy từ vựng cần ôn từ userProgress
+                        onPracticeClick = {
                             topicViewModel.prepareReviewMode()
-                            navController.navigate("flashcard/review") 
+                            navController.navigate("flashcard/review")
                         },
                         onTopicClick = { navController.navigate(AppDestinations.TOPICS.route) }
                     )
@@ -134,11 +134,19 @@ fun MainNavigation() {
                         navController = navController,
                         authViewModel = authViewModel,
                         topicViewModel = topicViewModel,
+                        onSeeAllLearnedClick = { navController.navigate("learned_list") }, // Chuyển trang
                         onReviewLearnedClick = {
                             // Chế độ ôn tập lại các từ đã học từ Profile
                             topicViewModel.prepareReviewLearnedMode()
                             navController.navigate("flashcard/review")
                         }
+                    )
+                }
+
+                composable("learned_list"){
+                    LearnedVocabListScreen(
+                        viewModel = topicViewModel,
+                        onBack = { navController.popBackStack()}
                     )
                 }
 

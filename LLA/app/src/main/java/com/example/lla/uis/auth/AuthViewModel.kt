@@ -2,6 +2,7 @@ package com.example.lla.uis.auth
 
 import androidx.credentials.GetCredentialResponse
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -12,6 +13,8 @@ import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 sealed class AuthState {
     data object Idle : AuthState()
@@ -28,28 +31,49 @@ class AuthViewModel : ViewModel() {
 
 
     init {
-        val currentUser = auth.currentUser
-        if (currentUser != null){
-            _authState.value = AuthState.Success(currentUser)
-        }
-    }
-    fun login(email: String, pass: String) {
-        if (email.isBlank() || pass.isBlank()) {
-            _authState.value = AuthState.Error("Email và mật khẩu không được để trống")
-            return
-        }
-
-        _authState.value = AuthState.Loading
-        auth.signInWithEmailAndPassword(email, pass)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    _authState.value = AuthState.Success(auth.currentUser)
+        viewModelScope.launch {
+            auth.addAuthStateListener { firebaseAuth ->
+                val currentUser = firebaseAuth.currentUser
+                if (currentUser != null) {
+                    _authState.value = AuthState.Success(currentUser)
                 } else {
-                    _authState.value = AuthState.Error(task.exception?.message ?: "Đăng nhập thất bại")
+                    _authState.value = AuthState.Idle // Đảm bảo trả về Idle rõ ràng nếu chưa đăng nhập
                 }
             }
+        }
+    }
+//    fun login(email: String, pass: String) {
+//        if (email.isBlank() || pass.isBlank()) {
+//            _authState.value = AuthState.Error("Email và mật khẩu không được để trống")
+//            return
+//        }
+//
+//        _authState.value = AuthState.Loading
+//        auth.signInWithEmailAndPassword(email, pass)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    _authState.value = AuthState.Success(auth.currentUser)
+//                } else {
+//                    _authState.value = AuthState.Error(task.exception?.message ?: "Đăng nhập thất bại")
+//                }
+//            }
+//    }
+fun login(email: String, pass: String) {
+    if (email.isBlank() || pass.isBlank()) {
+        _authState.value = AuthState.Error("Email và mật khẩu không được để trống")
+        return
     }
 
+    _authState.value = AuthState.Loading
+    viewModelScope.launch {
+        try {
+            auth.signInWithEmailAndPassword(email, pass).await()
+            _authState.value = AuthState.Success(auth.currentUser)
+        } catch (e: Exception) {
+            _authState.value = AuthState.Error(e.message ?: "Đăng nhập thất bại")
+        }
+    }
+}
     fun signup(email: String, pass: String, name: String) {
         if (email.isBlank() || pass.isBlank() || name.isBlank()) {
             _authState.value = AuthState.Error("Vui lòng điền đầy đủ thông tin")
